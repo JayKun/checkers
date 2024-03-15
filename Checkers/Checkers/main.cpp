@@ -71,6 +71,12 @@ int main()
     {
         game.PrintBoard();
 
+        // Check if board is already in a win state
+        if (game.CheckWinCondition())
+        {
+            break;
+        }
+
         // Generate input prompt
         string prompt = s_promptPrefix;
         switch (game.GetCurrentPlayerTurn())
@@ -109,7 +115,7 @@ int main()
     }
 
     // Current Player Turn is the winner
-    switch (game.GetCurrentPlayerTurn())
+    switch (game.GetWinner())
     {
         case PlayerSide::OPlayer:
         {

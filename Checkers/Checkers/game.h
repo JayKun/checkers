@@ -32,6 +32,7 @@ public:
         m_size(size),
         m_isRunning(true),
         m_curTurn(PlayerSide::OPlayer),
+        m_winner(PlayerSide::OPlayer),
         m_board(size, string(size, ' '))
     {}
 
@@ -43,6 +44,7 @@ public:
     const Board& GetBoard() const;
     bool IsGameRunning() const;
     PlayerSide GetCurrentPlayerTurn() const;
+    PlayerSide GetWinner() const;
     Coordinates GetCoordinates(const string& input) const;
     void PrintBoard() const;
 
@@ -55,16 +57,20 @@ private:
     bool HandleMove(const Coordinates& origin, const Coordinates& dest);
     bool HandleCapture(const Coordinates& origin, const Coordinates& dest);
 
+    vector<Coordinates> GetPossibleMoves(const Coordinates& origin) const;
+
     // Validation helper functions
     bool CanMove(const Coordinates& origin, const Coordinates& dest) const;
     bool ValidateInputs(const vector<string>& inputs) const;
     bool ValidateFormat(const string& input) const;
     bool ValidateValues(const string& input) const;
+    bool ValidateCoordinates(const Coordinates& coord) const;
     inline bool IsReachable(const Coordinates& a, const Coordinates& b, int steps) const;
 
     const int m_size;
     bool m_isRunning;
     PlayerSide m_curTurn;
+    PlayerSide m_winner;
 
     // Internal representation of checkers board
     Board m_board;

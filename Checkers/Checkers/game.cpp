@@ -79,14 +79,85 @@ bool Game::CheckWinCondition()
         }
     }
 
-    if (nOPieces == 0 || nXPieces == 0)
+    if (nOPieces == 0)
     {
-        PrintBoard();
-        m_isRunning = false;
+        m_winner = PlayerSide::XPlayer;
+        return true;
+    }
+    else if (nXPieces == 0)
+    {
+        m_winner = PlayerSide::OPlayer;
         return true;
     }
 
-    // Case 2: No more valid moves for one side
+    // Case 2: No more valid moves for O side
+    bool hasValidMovesForO = false;
+    if (!hasValidMovesForO)
+    {
+        for (size_t i = 0; i < m_board.size(); ++i)
+        {
+            for (size_t j = 0; j < m_board[i].size(); ++j)
+            {
+                const char c = m_board[i][j];
+                if (c != s_oPiece && c != s_oKingPiece)
+                {
+                    continue;
+                }
+
+                Coordinates origin;
+                origin.row = i;
+                origin.col = j;
+                if (GetPossibleMoves(origin).size() > 0)
+                {
+                    hasValidMovesForO = true;
+                    break;
+                }
+            }
+
+            if (hasValidMovesForO)
+                break;
+        }
+    }
+    if (!hasValidMovesForO)
+    {
+        m_winner = PlayerSide::XPlayer;
+        return true;
+    }
+
+    // Case 2: No more valid moves for X side
+    bool hasValidMovesForX = false;
+    if (!hasValidMovesForX)
+    {
+        for (size_t i = 0; i < m_board.size(); ++i)
+        {
+            for (size_t j = 0; j < m_board[i].size(); ++j)
+            {
+                const char c = m_board[i][j];
+                if (c != s_xPiece && c != s_xKingPiece)
+                {
+                    continue;
+                }
+
+                Coordinates origin;
+                origin.row = i;
+                origin.col = j;
+                if (GetPossibleMoves(origin).size() > 0)
+                {
+                    hasValidMovesForX = true;
+                    break;
+                }
+            }
+
+            if (hasValidMovesForX)
+                break;
+        }
+    }
+    if (!hasValidMovesForX)
+    {
+        m_winner = PlayerSide::OPlayer;
+        return true;
+    }
+
     return false;
 }
 
@@ -103,6 +174,11 @@ bool Game::IsGameRunning() const
 PlayerSide Game::GetCurrentPlayerTurn() const
 {
     return m_curTurn;
+}
+
+PlayerSide Game::GetWinner() const
+{
+    return m_winner;
 }
 
 Coordinates Game::GetCoordinates(const string& input) const
@@ -206,9 +282,15 @@ bool Game::ProcessInput(const vector<string>& inputs)
         }
     }
 
-    if (!CheckWinCondition())
+    m_isRunning = !CheckWinCondition();
+    if (m_isRunning)
     {
         NextTurn();
+    }
+    else
+    {
+        // Print final baord
+        PrintBoard();
     }
 
     return true;
@@ -255,7 +337,8 @@ void Game::Set(const Coordinates& coord, char c)
 
 char Game::Get(const Coordinates& coord) const
 {
-    return m_board[coord.row][coord.col];
+    if (coord.IsValid())
+        return m_board[coord.row][coord.col];
 }
 
 void Game::NextTurn()
@@ -435,9 +518,140 @@ bool Game::ValidateValues(const string& input) const
     return true;
 }
 
+bool Game::ValidateCoordinates(const Coordinates& coord) const
+{
+    if (coord.col < 0 || coord.col >= m_size)
+    {
+        return false;
+    }
+
+    if (coord.row < 0 || coord.row >= m_size)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 inline bool Game::IsReachable(const Coordinates& a, const Coordinates& b, int steps) const
 {
     const auto rowDiff = abs(a.row - b.row);
     const auto colDiff = abs(a.col - b.col);
     return rowDiff <= steps && colDiff <= steps && rowDiff == colDiff;
+}
+
+vector<Coordinates> Game::GetPossibleMoves(const Coordinates& origin) const
+{
+    vector<Coordinates> moves;
+
+    // Move and capture regular pieces
+    Coordinates leftMove, rightMove, leftCapture, rightCapture;
+
+    // Move and capture for king pieces
+    Coordinates left2Move, right2Move, left2Capture, right2Capture;
+
+    switch (Get(origin))
+    {
+        case s_oPiece:
+        {
+            // Move left
+            leftMove.col = origin.col - 1;
+            leftMove.row = origin.row - 1;
+
+            // Move right
+            rightMove.col = origin.col + 1;
+            rightMove.row = origin.row - 1;
+
+            // Capture left
+            leftCapture.col = origin.col - 2;
+            leftCapture.row = origin.row - 2;
+
+            // Capture right
+            rightCapture.col = origin.col + 2;
+            rightCapture.row = origin.row - 2;
+
+            break;
+        }
+        case s_xPiece:
+        {
+            // Move left
+            leftMove.col = origin.col + 1;
+            leftMove.row = origin.row + 1;
+
+            // Move right
+            rightMove.col = origin.col - 1;
+            rightMove.row = origin.row + 1;
+
+            // Capture left
+            leftCapture.col = origin.col + 2;
+            leftCapture.row = origin.row + 2;
+
+            // Capture right
+            rightCapture.col = origin.col - 2;
+            rightCapture.row = origin.row + 2;
+
+            break;
+        }
+        case s_oKingPiece:
+        case s_xKingPiece:
+        {
+            // Move left
+            leftMove.col = origin.col - 1;
+            leftMove.row = origin.row - 1;
+
+            // Move backwards left
+            left2Move.col = origin.col + 1;
+            left2Move.row = origin.row + 1;
+
+            // Move right
+            rightMove.col = origin.col + 1;
+            rightMove.row = origin.row - 1;
+
+            // Move backwards right
+            right2Move.col = origin.col - 1;
+            right2Move.row = origin.row + 1;
+
+            // Capture left
+            leftCapture.col = origin.col - 2;
+            leftCapture.row = origin.row - 2;
+
+            left2Capture.col = origin.col + 2;
+            left2Capture.row = origin.row + 2;
+
+            // Capture right
+            rightCapture.col = origin.col + 2;
+            rightCapture.row = origin.row - 2;
+
+            right2Capture.col = origin.col - 2;
+            right2Capture.row = origin.row + 2;
+
+            break;
+        }
+    }
+
+    if (leftMove.IsValid() && ValidateCoordinates(leftMove) && CanMove(origin, leftMove))
+        moves.push_back(move(leftMove));
+
+    if (rightMove.IsValid() && ValidateCoordinates(rightMove) && CanMove(origin, rightMove))
+        moves.push_back(move(rightMove));
+
+    if (leftCapture.IsValid() && ValidateCoordinates(leftCapture) && CanMove(origin, leftCapture))
+        moves.push_back(move(leftCapture));
+
+    if (rightCapture.IsValid() && ValidateCoordinates(rightCapture) && CanMove(origin, rightCapture))
+        moves.push_back(move(rightCapture));
+
+    if (left2Move.IsValid() && ValidateCoordinates(left2Move) && CanMove(origin, left2Move))
+        moves.push_back(move(left2Move));
+
+    if (right2Move.IsValid() && ValidateCoordinates(right2Move) && CanMove(origin, right2Move))
+        moves.push_back(move(right2Move));
+
+    if (left2Capture.IsValid() && ValidateCoordinates(left2Capture) && CanMove(origin, left2Capture))
+        moves.push_back(move(left2Capture));
+
+    if (right2Capture.IsValid() && ValidateCoordinates(right2Capture) && CanMove(origin, right2Capture))
+        moves.push_back(move(right2Capture));
+
+    return moves;
 }
