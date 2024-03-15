@@ -4,6 +4,9 @@
 #include "game.h"
 
 #include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <sstream>
 
 constexpr auto s_promptPrefix = "player ";
 constexpr auto s_promptSuffix = "> ";
@@ -43,7 +46,25 @@ int main()
 {
     // Initialize 8 x 8 board
     Game game(8);
-    game.InitializeBoard();
+
+    bool hasValidBoard = false;
+    ifstream file("board.txt");
+    if (file)
+    {
+        // Read from 'board.text' if one such file exist
+        Board board;
+        string line;
+        while (getline(file, line))
+        {
+            board.emplace_back(move(line));
+        }
+        hasValidBoard = game.InitializeCustomBoard(move(board));
+    }
+
+    if (!hasValidBoard)
+    {
+        game.InitializeBoard();
+    }
 
     // Fetch input from player
     while (game.IsGameRunning())
@@ -80,6 +101,7 @@ int main()
             cout << "Input length must be at least 2" << endl;
         }
 
+        // TODO: Replace this call with a network call to send input to server
         if (!game.ProcessInput(parsedInput))
         {
             cout << "Invalid input" << endl;
@@ -91,10 +113,12 @@ int main()
     {
         case PlayerSide::OPlayer:
         {
+            cout << "Player O wins!" << endl;
             return 1;
         }
         case PlayerSide::XPlayer:
         {
+            cout << "Player X wins!" << endl;
             return 2;
         }
     }

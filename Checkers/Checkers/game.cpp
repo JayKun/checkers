@@ -15,7 +15,7 @@ constexpr auto s_emptyPiece = '.';
 //------------------------------------------------------------------------
 // Game Implementation - Public API
 //------------------------------------------------------------------------
-bool Game::InitializeBoard()
+void Game::InitializeBoard()
 {
     // Initialize x pieces
     for (int row = 0; row < 1; ++row)
@@ -46,8 +46,21 @@ bool Game::InitializeBoard()
             m_board[row][col] = s_oKingPiece;
         }
     }
+}
 
-    return true;
+bool Game::InitializeCustomBoard(Board&& board)
+{
+    // We allow the function to accept a custom state
+    // to easily test and simulate certain board states
+    if (board.size() == m_size
+        && board.size() > 0
+        && board.front().size() == m_size)
+    {
+        m_board = move(board);
+        return true;
+    }
+
+    return false;
 }
 
 bool Game::CheckWinCondition()

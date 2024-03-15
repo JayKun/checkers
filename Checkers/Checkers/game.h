@@ -35,7 +35,8 @@ public:
         m_board(size, string(size, ' '))
     {}
 
-    bool InitializeBoard();
+    void InitializeBoard();
+    bool InitializeCustomBoard(Board&& board);
     bool CheckWinCondition();
     bool ProcessInput(const vector<string>& inputs);
 
