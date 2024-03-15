@@ -5,8 +5,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <iterator>
-#include <sstream>
 
 constexpr auto s_promptPrefix = "player ";
 constexpr auto s_promptSuffix = "> ";
